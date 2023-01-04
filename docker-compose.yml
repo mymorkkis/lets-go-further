@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  json_api:
+    build:
+      context: ./
+      dockerfile: ./cmd/api/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - $API_PORT:$API_PORT
+    volumes:
+      - ./cmd/api/:/app/cmd/api/
+      - ./internal/:/app/internal/
