@@ -46,11 +46,12 @@ func NewConfig() (*config, error) {
 }
 
 func ensureRequiredConfigProvided() error {
-	requiredEnvVars := [5]string{
+	requiredEnvVars := [6]string{
 		"API_PORT",
 		"API_ENV",
 		"POSTGRES_USER",
 		"POSTGRES_PASSWORD",
+		"POSTGRES_PORT",
 		"POSTGRES_DB",
 	}
 
@@ -77,9 +78,10 @@ func ensureRequiredConfigProvided() error {
 
 func getDBConfig() (*db, error) {
 	dsn := fmt.Sprintf(
-		"postgres://%s:%s@json_api_db/%s?sslmode=disable",
+		"postgres://%s:%s@json_api_db:%s/%s?sslmode=disable",
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_DB"),
 	)
 
