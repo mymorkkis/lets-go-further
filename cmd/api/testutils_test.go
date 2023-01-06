@@ -11,7 +11,7 @@ import (
 )
 
 func newTestApplication(t *testing.T) *application {
-	testConfig := Config{
+	testConfig := config{
 		port: 9999,
 		env:  "testing",
 	}

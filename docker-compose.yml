@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   json_api:
+    container_name: json_api
     build:
       context: ./
       dockerfile: ./cmd/api/Dockerfile
@@ -12,3 +13,41 @@ services:
     volumes:
       - ./cmd/api/:/app/cmd/api/
       - ./internal/:/app/internal/
+    depends_on:
+      json_api_db:
+        condition: service_healthy
+
+  json_api_db:
+    image: postgres:15.1-alpine
+    container_name: json_api_db
+    env_file:
+      - .env
+    volumes:
+      - ./scripts/db_init.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - json-api-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 2s
+
+  migrate:
+    image: migrate/migrate
+    container_name: json_api_migrations
+    depends_on:
+      json_api_db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command: [
+        "-path",
+        "./migrations/",
+        "-database",
+        "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@json_api_db:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable",
+        "up"
+      ]
+
+volumes:
+  json-api-db-data:
+    driver: local
