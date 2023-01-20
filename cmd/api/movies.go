@@ -186,11 +186,13 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	movies, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
+	movies, pageInfo, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	app.serveJSON(w, r, http.StatusOK, movies, nil)
+	data := map[string]any{"movies": movies, "pageInfo": pageInfo}
+
+	app.serveJSON(w, r, http.StatusOK, data, nil)
 }
