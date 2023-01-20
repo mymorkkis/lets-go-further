@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/mymorkkis/lets-go-further-json-api/internal/data"
+	"github.com/mymorkkis/lets-go-further-json-api/internal/jsonlog"
 )
 
 const version = "1.0.0"
@@ -18,21 +19,21 @@ const version = "1.0.0"
 type application struct {
 	version string
 	config  *config
-	logger  *log.Logger
+	logger  *jsonlog.Logger
 	models  data.Models
 }
 
 func main() {
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	config, err := NewConfig()
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 
 	db, err := openDB(config)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 	defer db.Close()
 
@@ -46,14 +47,18 @@ func main() {
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", config.port),
 		Handler:      app.routes(),
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("starting %s server on %s", config.env, server.Addr)
+	logger.PrintInfo("starting server", map[string]string{
+		"addr": server.Addr,
+		"env":  config.env,
+	})
 	err = server.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 func openDB(config *config) (*sql.DB, error) {

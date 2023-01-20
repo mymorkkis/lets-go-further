@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/mymorkkis/lets-go-further-json-api/internal/jsonlog"
 )
 
 func newTestApplication(t *testing.T) *application {
@@ -18,7 +19,7 @@ func newTestApplication(t *testing.T) *application {
 
 	return &application{
 		version: version,
-		logger:  log.New(io.Discard, "", 0),
+		logger:  jsonlog.New(io.Discard, jsonlog.LevelFatal),
 		config:  &testConfig,
 	}
 }
