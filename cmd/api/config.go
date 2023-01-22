@@ -15,10 +15,17 @@ type db struct {
 	maxIdleTime  string
 }
 
+type limiter struct {
+	rps     float64
+	burst   int
+	enabled bool
+}
+
 type config struct {
-	port int
-	env  string
-	db   *db
+	port    int
+	env     string
+	db      *db
+	limiter *limiter
 }
 
 func NewConfig() (*config, error) {
@@ -36,10 +43,16 @@ func NewConfig() (*config, error) {
 		return nil, err
 	}
 
+	limiter, err := getLimiterConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	c := config{
-		env:  os.Getenv("API_ENV"),
-		port: int(port),
-		db:   db,
+		env:     os.Getenv("API_ENV"),
+		port:    int(port),
+		db:      db,
+		limiter: limiter,
 	}
 
 	return &c, nil
@@ -110,6 +123,32 @@ func getDBConfig() (*db, error) {
 	return db, nil
 }
 
+func getLimiterConfig() (*limiter, error) {
+	rps, err := getOptionalFloat64Env("LIMITER_RPS", 2.0)
+	if err != nil {
+		return nil, err
+	}
+
+	burst, err := getOptionalIntEnv("LIMITER_BURST", 4)
+	if err != nil {
+		return nil, err
+	}
+
+	limiterEnabled := true
+	enabled := strings.ToLower(os.Getenv("LIMITER_ENABLED"))
+	if enabled == "false" || enabled == "f" {
+		limiterEnabled = false
+	}
+
+	limiter := &limiter{
+		rps:     rps,
+		burst:   burst,
+		enabled: limiterEnabled,
+	}
+
+	return limiter, nil
+}
+
 func getOptionalIntEnv(key string, defaultValue int) (int, error) {
 	env := os.Getenv(key)
 	if env == "" {
@@ -122,4 +161,18 @@ func getOptionalIntEnv(key string, defaultValue int) (int, error) {
 	}
 
 	return int(parsedInt), nil
+}
+
+func getOptionalFloat64Env(key string, defaultValue float64) (float64, error) {
+	env := os.Getenv(key)
+	if env == "" {
+		return defaultValue, nil
+	}
+
+	parsedFloat, err := strconv.ParseFloat(key, 64)
+	if err != nil {
+		return 0.0, err
+	}
+
+	return parsedFloat, nil
 }
