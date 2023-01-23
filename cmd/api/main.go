@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -44,20 +41,7 @@ func main() {
 		models:  data.NewModels(db),
 	}
 
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", config.port),
-		Handler:      app.routes(),
-		ErrorLog:     log.New(logger, "", 0),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-
-	logger.PrintInfo("starting server", map[string]string{
-		"addr": server.Addr,
-		"env":  config.env,
-	})
-	err = server.ListenAndServe()
+	err = app.serve()
 	logger.PrintFatal(err, nil)
 }
 
