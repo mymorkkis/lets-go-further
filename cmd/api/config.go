@@ -21,11 +21,20 @@ type limiter struct {
 	enabled bool
 }
 
+type smtp struct {
+	host     string
+	port     int
+	username string
+	password string
+	sender   string
+}
+
 type config struct {
 	port    int
 	env     string
 	db      *db
 	limiter *limiter
+	smtp    *smtp
 }
 
 func NewConfig() (*config, error) {
@@ -48,24 +57,32 @@ func NewConfig() (*config, error) {
 		return nil, err
 	}
 
-	c := config{
+	smtp, err := getSMTPConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	c := &config{
 		env:     os.Getenv("API_ENV"),
 		port:    int(port),
 		db:      db,
 		limiter: limiter,
+		smtp:    smtp,
 	}
 
-	return &c, nil
+	return c, nil
 }
 
 func ensureRequiredConfigProvided() error {
-	requiredEnvVars := [6]string{
+	requiredEnvVars := [8]string{
 		"API_PORT",
 		"API_ENV",
 		"POSTGRES_USER",
 		"POSTGRES_PASSWORD",
 		"POSTGRES_PORT",
 		"POSTGRES_DB",
+		"SMTP_USERNAME",
+		"SMTP_PASSWORD",
 	}
 
 	missingVars := []string{}
@@ -149,6 +166,27 @@ func getLimiterConfig() (*limiter, error) {
 	return limiter, nil
 }
 
+func getSMTPConfig() (*smtp, error) {
+	host := getOptionalStringEnv("SMTP_HOST", "smtp.mailtrap.io")
+	port, err := getOptionalIntEnv("SMTP_PORT", 25)
+	if err != nil {
+		return nil, err
+	}
+	username := os.Getenv("SMTP_USERNAME")
+	password := os.Getenv("SMTP_PASSWORD")
+	sender := getOptionalStringEnv("SMTP_SENDER", "Greenlight <no-reply@test.com>")
+
+	smtp := &smtp{
+		host:     host,
+		port:     port,
+		username: username,
+		password: password,
+		sender:   sender,
+	}
+
+	return smtp, nil
+}
+
 func getOptionalIntEnv(key string, defaultValue int) (int, error) {
 	env := os.Getenv(key)
 	if env == "" {
@@ -161,6 +199,14 @@ func getOptionalIntEnv(key string, defaultValue int) (int, error) {
 	}
 
 	return int(parsedInt), nil
+}
+
+func getOptionalStringEnv(key, defaultValue string) string {
+	env := os.Getenv(key)
+	if env == "" {
+		return defaultValue
+	}
+	return env
 }
 
 func getOptionalFloat64Env(key string, defaultValue float64) (float64, error) {

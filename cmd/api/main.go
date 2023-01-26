@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mymorkkis/lets-go-further-json-api/internal/data"
 	"github.com/mymorkkis/lets-go-further-json-api/internal/jsonlog"
+	"github.com/mymorkkis/lets-go-further-json-api/internal/mailer"
 )
 
 const version = "1.0.0"
@@ -18,6 +19,7 @@ type application struct {
 	config  *config
 	logger  *jsonlog.Logger
 	models  data.Models
+	mailer  mailer.Mailer
 }
 
 func main() {
@@ -34,11 +36,14 @@ func main() {
 	}
 	defer db.Close()
 
+	smtp := config.smtp
+
 	app := &application{
 		version: version,
 		config:  config,
 		logger:  logger,
 		models:  data.NewModels(db),
+		mailer:  mailer.New(smtp.host, smtp.port, smtp.username, smtp.password, smtp.sender),
 	}
 
 	err = app.serve()
