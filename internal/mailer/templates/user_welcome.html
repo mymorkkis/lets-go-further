@@ -5,7 +5,7 @@ Hi {{.Name}},
 
 Thanks for signing up for a Greenlight account. We're excited to have you on board!
 
-Please send a request to the `PUT /v1/users/activated` endpoint with the following JSON
+Please send a request to the `PUT /v1/users/activate` endpoint with the following JSON
 body to activate your account:
 
 {"token": "{{.activationToken}}"}
@@ -29,7 +29,7 @@ The Greenlight Team
 <body>
     <p>Hi {{.Name}}</p>
     <p>Thanks for signing up for a Greenlight account. We're excited to have you on board!</p>
-    <p>Please send a request to the <code>PUT /v1/users/activated</code> endpoint with the
+    <p>Please send a request to the <code>PUT /v1/users/activate</code> endpoint with the
         following JSON body to activate your account:</p>
     <pre><code>
     {"token": "{{.activationToken}}"}

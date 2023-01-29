@@ -31,7 +31,7 @@ type JsonResponse struct {
 }
 
 func (app *application) serveJSON(w http.ResponseWriter, r *http.Request, status int, data any, headers http.Header) {
-	json_, err := json.Marshal(&JsonResponse{
+	jsonResponse, err := json.Marshal(&JsonResponse{
 		Status: Status{
 			Code:    status,
 			Message: http.StatusText(status),
@@ -53,7 +53,7 @@ func (app *application) serveJSON(w http.ResponseWriter, r *http.Request, status
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(json_)
+	w.Write(jsonResponse)
 }
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, input any) error {
